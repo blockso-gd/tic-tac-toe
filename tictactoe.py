@@ -108,42 +108,43 @@ class Game:
         if self.movesDone >= 9 and not self.winner:
             return (999,999,999)
 
-    def slot_update_draw(self):
+    def slot_update(self):
+        if not self.running: return
+
+        if self.movesDone >= 5:
+            win_message = self.checkWin()
+
+            if win_message:
+                self.victory_procedure(win_message)
+                return
+
         mouse = pygame.mouse.get_just_pressed()
 
         for slot_f in self.slots: #slot_f is a list of slots (row)
 
             for  slot_i in slot_f:  #slot_i is an individual slot
                 
-                slot_i.draw()
-
-                if slot_i.rect.collidepoint(pygame.mouse.get_pos()) and mouse[0] and slot_i.state == 0 and self.running:
+                if slot_i.rect.collidepoint(pygame.mouse.get_pos()) and mouse[0] and slot_i.state == 0 :
                     slot_i.update(self.currentPlayer+1)
 
                     self.currentPlayer = not self.currentPlayer
                     self.movesDone += 1
+                    self.move_audios[self.movesDone-1].play()        
 
-                    if self.movesDone >= 5:
-                        win_message = self.checkWin()
+    def draw_slots(self):
+        for slot_f in self.slots: #slot_f is a list of slots (row)
 
-                        if win_message:
-                            self.victory_procedure(win_message)
-                            return
-                        
-                    self.move_audios[self.movesDone-1].play()
-                    print("playing move sound")
+            for  slot_i in slot_f:
+                slot_i.draw()
 
     def victory_procedure(self, win_message):
-        print(win_message)
         self.running = False
         self.winner = win_message[2]
 
         match self.winner:
             case 1:
-                print("O HAS WON THE GAME")
                 win_sign = "O"
             case 2:
-                print("X HAS WON THE GAME")
                 win_sign = "X"
 
         win_index = win_message[1]
@@ -168,8 +169,8 @@ class Game:
 
             case 999:
                 self.victory_message = self.victory_font.render("Its a tie!", False, (50,50,50))
+                pygame.mixer.stop()
                 self.end_audio.play()
-                print("playing sound end 999")
                 return
 
             case _: return None
@@ -177,8 +178,8 @@ class Game:
         self.winLineCords.append(line_start)
         self.winLineCords.append(line_end)
         self.victory_message = self.victory_font.render(f"{win_sign} has won! GG!", False, (50,50,50))
+        pygame.mixer.stop()
         self.end_audio.play()
-        print("playing sound end")
 
     def clear_grid(self):
         for slot_f in self.slots:
@@ -205,12 +206,13 @@ class Game:
 
             self.screen.blit(self.grid, self.gridPos)
 
-            self.slot_update_draw()
+            self.slot_update()
+            self.draw_slots()
 
             if self.winner and self.winner != 999:
                 pygame.draw.line(self.screen, (230,230,230), self.winLineCords[0], self.winLineCords[1], 25)
 
-            if self.victory_message:
+            if self.winner:
                 self.screen.blit(self.victory_message, (self.SCREEN_WIDTH/2-self.victory_message.size[0]/2, 10))
 
             pygame.display.update()
