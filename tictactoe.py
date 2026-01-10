@@ -191,6 +191,7 @@ class Game:
         self.winner = None
         self.winLineCords.clear()
         self.victory_message = None
+        pygame.mixer.stop()
 
     def run(self):
         while True:
@@ -218,3 +219,4 @@ class Game:
             pygame.display.update()
             self.Clock.tick(self.currentRefreshRate)
 Game().run()
+
